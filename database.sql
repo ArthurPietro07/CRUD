@@ -14,7 +14,6 @@ CREATE TABLE categorias (
     nome VARCHAR(255) NOT NULL
 );
 
-//crie a tabela produtos com os campos id, nome, descricao e preco
 CREATE TABLE produtos (
     id INT AUTO_INCREMENT PRIMARY KEY,
     nome VARCHAR(255) NOT NULL,
