@@ -1,66 +1,84 @@
-const db = require('../config/db');
-
-const Categoria = {
-    create: (categoria, callback) => {
-        const query = 'INSERT INTO categorias (nome) VALUES (?)';
-        db.query(query, [categoria.nome], (err, results) => {
-            if (err) {
-                return callback(err);
-            }
-            callback(null, results.insertId);
-        });
-    },
-
-    findById: (id, callback) => {
-        const query = 'SELECT * FROM categorias WHERE id = ?';
-        db.query(query, [id], (err, results) => {
-            if (err) {
-                return callback(err);
-            }
-            callback(null, results[0]);
-        });
-    },
-
-    findByCategorianame: (nome, callback) => {
-        const query = 'SELECT * FROM categorias WHERE nome = ?';
-        db.query(query, [nome], (err, results) => {
-            if (err) {
-                return callback(err);
-            }
-            callback(null, results[0]);
-        });
-    },
-
-    update: (id, categoria, callback) => {
-        const query = 'UPDATE categorias SET nome = ? WHERE id = ?';
-        db.query(query, [categoria.nome,id], (err, results) => {
-            if (err) {
-                return callback(err);
-            }
-            callback(null, results);
-        });
-    },
-
-    delete: (id, callback) => {
-        const query = 'DELETE FROM categorias WHERE id = ?';
-        db.query(query, [id], (err, results) => {
-            if (err) {
-                return callback(err);
-            }
-            callback(null, results);
-        });
-    },
-
-    getAll: (callback) => {
-        const query = 'SELECT * FROM categorias';
-        db.query(query, (err, results) => {
-            if (err) {
-                return callback(err);
-            }
-            callback(null, results);
-        });
-    },
+// Mock do banco de dados para categorias
+const mockDBCategorias = {
+    categorias: [
+        { id: 1, nome: 'Eletrônicos' },
+        { id: 2, nome: 'Roupas' },
+        { id: 3, nome: 'Alimentos' }
+    ],
+    nextId: 4
 };
 
+const Categoria = {
+    // Criar categoria
+    create: (categoriaData) => {
+        const { nome } = categoriaData;
+        
+        // Verifica se já existe
+        const existing = mockDBCategorias.categorias.find(c => c.nome.toLowerCase() === nome.toLowerCase());
+        if (existing) {
+            throw new Error('Categoria já existe');
+        }
+        
+        const newCategoria = {
+            id: mockDBCategorias.nextId++,
+            nome
+        };
+        
+        mockDBCategorias.categorias.push(newCategoria);
+        return newCategoria;
+    },
+    
+    // Buscar por ID
+    findById: (id) => {
+        return new Promise((resolve) => {
+            const categoria = mockDBCategorias.categorias.find(c => c.id === parseInt(id)) || null;
+            resolve(categoria);
+        });
+    },
+    
+    // Buscar por nome
+    findByNome: (nome) => {
+        return new Promise((resolve) => {
+            const categoria = mockDBCategorias.categorias.find(c => c.nome.toLowerCase() === nome.toLowerCase()) || null;
+            resolve(categoria);
+        });
+    },
+    
+    // Atualizar categoria
+    update: (id, categoriaData) => {
+        return new Promise((resolve) => {
+            const index = mockDBCategorias.categorias.findIndex(c => c.id === parseInt(id));
+            if (index === -1) {
+                resolve(null);
+                return;
+            }
+            
+            const categoria = mockDBCategorias.categorias[index];
+            mockDBCategorias.categorias[index] = { ...categoria, ...categoriaData };
+            resolve(mockDBCategorias.categorias[index]);
+        });
+    },
+    
+    // Deletar categoria
+    delete: (id) => {
+        return new Promise((resolve) => {
+            const index = mockDBCategorias.categorias.findIndex(c => c.id === parseInt(id));
+            if (index === -1) {
+                resolve(false);
+                return;
+            }
+            
+            mockDBCategorias.categorias.splice(index, 1);
+            resolve(true);
+        });
+    },
+    
+    // Listar todas
+    getAll: () => {
+        return new Promise((resolve) => {
+            resolve(mockDBCategorias.categorias);
+        });
+    }
+};
 
 module.exports = Categoria;

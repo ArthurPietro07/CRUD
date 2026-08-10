@@ -1,8 +1,14 @@
 <h1>Cadastrar categoria</h1>
+
+<% if (typeof error !== 'undefined' && error) { %>
+    <div class="alert alert-danger"><%= error %></div>
+<% } %>
+
 <form action="/categorias" method="POST">
     <div class="form-group">
         <label for="nome">Nome da categoria</label>
         <input type="text" class="form-control" id="nome" name="nome" required>
     </div>
     <button type="submit" class="btn btn-primary">Cadastrar</button>
+    <a href="/categorias" class="btn btn-secondary">Cancelar</a>
 </form>

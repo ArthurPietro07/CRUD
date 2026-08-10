@@ -1,75 +1,100 @@
-const db = require('../config/db');
+// Mock do banco de dados em memória
+const mockDB = {
+    users: [
+        { id: 1, username: 'admin', password: 'admin123', role: 'admin' },
+        { id: 2, username: 'user', password: 'user123', role: 'user' }
+    ],
+    nextId: 3
+};
 
+// Funções para manipular usuários
 const User = {
-    create: (user, callback) => {
-        const query = 'INSERT INTO users (username, password, role) VALUES (?, ?, ?)';
-        db.query(query, [user.username, user.password, user.role], (err, results) => {
-            if (err) {
-                return callback(err);
-            }
-            callback(null, results.insertId);
+    // Criar usuário
+    create: (userData) => {
+        const { username, password, role } = userData;
+        
+        // Verifica se já existe
+        const existing = mockDB.users.find(u => u.username === username);
+        if (existing) {
+            throw new Error('Usuário já existe');
+        }
+        
+        const newUser = {
+            id: mockDB.nextId++,
+            username,
+            password,
+            role: role || 'user'
+        };
+        
+        mockDB.users.push(newUser);
+        return newUser;
+    },
+    
+    // Buscar por ID
+    findById: (id) => {
+        return new Promise((resolve) => {
+            const user = mockDB.users.find(u => u.id === parseInt(id)) || null;
+            resolve(user);
         });
     },
-
-    findById: (id, callback) => {
-        const query = 'SELECT * FROM users WHERE id = ?';
-        db.query(query, [id], (err, results) => {
-            if (err) {
-                return callback(err);
-            }
-            callback(null, results[0]);
+    
+    // Buscar por username
+    findByUsername: (username) => {
+        return new Promise((resolve) => {
+            const user = mockDB.users.find(u => u.username === username) || null;
+            resolve(user);
         });
     },
-
-    findByUsername: (username, callback) => {
-        const query = 'SELECT * FROM users WHERE username = ?';
-        db.query(query, [username], (err, results) => {
-            if (err) {
-                return callback(err);
+    
+    // Atualizar usuário
+    update: (id, userData) => {
+        return new Promise((resolve) => {
+            const index = mockDB.users.findIndex(u => u.id === parseInt(id));
+            if (index === -1) {
+                resolve(null);
+                return;
             }
-            callback(null, results[0]);
+            
+            const user = mockDB.users[index];
+            mockDB.users[index] = { ...user, ...userData };
+            resolve(mockDB.users[index]);
         });
     },
-
-    update: (id, user, callback) => {
-        const query = 'UPDATE users SET username = ?, password = ?, role = ? WHERE id = ?';
-        db.query(query, [user.username, user.password, user.role, id], (err, results) => {
-            if (err) {
-                return callback(err);
+    
+    // Deletar usuário
+    delete: (id) => {
+        return new Promise((resolve) => {
+            const index = mockDB.users.findIndex(u => u.id === parseInt(id));
+            if (index === -1) {
+                resolve(false);
+                return;
             }
-            callback(null, results);
+            
+            mockDB.users.splice(index, 1);
+            resolve(true);
         });
     },
-
-    delete: (id, callback) => {
-        const query = 'DELETE FROM users WHERE id = ?';
-        db.query(query, [id], (err, results) => {
-            if (err) {
-                return callback(err);
-            }
-            callback(null, results);
+    
+    // Listar todos
+    getAll: () => {
+        return new Promise((resolve) => {
+            resolve(mockDB.users);
         });
     },
-
-    getAll: (callback) => {
-        const query = 'SELECT * FROM users';
-        db.query(query, (err, results) => {
-            if (err) {
-                return callback(err);
+    
+    // Buscar por nome
+    searchByName: (searchTerm) => {
+        return new Promise((resolve) => {
+            if (!searchTerm) {
+                resolve(mockDB.users);
+                return;
             }
-            callback(null, results);
+            const results = mockDB.users.filter(u => 
+                u.username.toLowerCase().includes(searchTerm.toLowerCase())
+            );
+            resolve(results);
         });
-    },
-
-    searchByName: (name, callback) => {
-        const query = 'SELECT * FROM users WHERE username LIKE ?';
-        db.query(query, [`%${name}%`], (err, results) => {
-            if (err) {
-                return callback(err);
-            }
-            callback(null, results);
-        });
-    },    
+    }
 };
 
 module.exports = User;
